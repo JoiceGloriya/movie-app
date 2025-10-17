@@ -1,4 +1,4 @@
-name: Build and deploy Vite React app to Azure Web App - movieapp-frontend
+name: Build and Deploy Vite React App to Azure Web App
 
 on:
   push:
@@ -7,29 +7,60 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      # Checkout the repo
+      # 1️⃣ Checkout repo
       - uses: actions/checkout@v4
 
-      # Setup Node.js
-      - name: Set up Node.js
+      # 2️⃣ Setup Node.js (Vite works well with Node 18)
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'  # Use Node 18 for Vite
+          node-version: '18.x'
 
-      # Install dependencies and build
-      - name: Install dependencies and build
-        run: |
-          npm ci
-          npm run build
+      # 3️⃣ Install dependencies and build
+      - name: Install dependencies
+        run: npm ci
 
-      # Deploy to Azure Web App
+      - name: Build app
+        run: npm run build
+
+      # 4️⃣ Upload build artifact (dist folder)
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-app
+          path: dist
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      # 1️⃣ Checkout repo (optional but recommended)
+      - uses: actions/checkout@v4
+
+      # 2️⃣ Download build artifact
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: node-app
+          path: dist
+
+      # 3️⃣ Login to Azure
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F36C930CB7C84410B9F28C07B5B0C713 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_148B7D18A99A4CD79E77FFC089FFFAF6 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DC0936933A144C3ABA28DB7AC7113923 }}
+
+      # 4️⃣ Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'movieapp-frontend'
           slot-name: 'Production'
-          package: ./dist  # ✅ Vite output folder
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./dist   # ✅ Points to Vite output folder
