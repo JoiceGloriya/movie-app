@@ -44,11 +44,14 @@ jobs:
 
     steps:
       # Download the build artifact
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
+      # Inside the deploy step
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
         with:
-          name: node-app
-          path: ./dist  # ensure artifact is placed in dist folder
+         app-name: 'movieapp-frontend'
+         slot-name: 'Production'
+         package: ./dist   # ✅ Correct for Vite
+
 
       # Login to Azure
       - name: Login to Azure
@@ -65,3 +68,4 @@ jobs:
           app-name: 'movieapp-frontend'
           slot-name: 'Production'
           package: ./dist  # ✅ Deploy the Vite 'dist' folder
+
