@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD
+name: Azure Static Web Apps CI/CD - movieapp-frontend
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    name: Build and Deploy Job
+    name: Build and Deploy MovieApp Frontend
     steps:
       # 1️⃣ Checkout repository
       - uses: actions/checkout@v4
@@ -20,20 +20,20 @@ jobs:
         with:
           node-version: '18.x'
 
-      # 3️⃣ Build app
+      # 3️⃣ Install dependencies and build
       - name: Install dependencies
         run: npm ci
-      - name: Build app
+      - name: Build Vite app
         run: npm run build
 
       # 4️⃣ Deploy to Azure Static Web App
-      - name: 'Deploy to Azure Static Web App'
+      - name: Deploy to Azure Static Web App
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # used for GitHub integrations
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "/"           # Location of package.json
-          api_location: ""            # Leave empty if no API
-          output_location: "dist"     # ✅ Vite output folder
-          skip_app_build: true        # ✅ Skip rebuild since we already built
+          app_location: "/"        # where package.json is located
+          api_location: ""         # leave empty if no Azure Functions
+          output_location: "dist"  # ✅ Vite output folder
+          skip_app_build: true     # skip rebuild since we already built
