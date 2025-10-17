@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD - movieapp-frontend
+name: Build and deploy Vite React app to Azure Web App - movieapp-frontend
 
 on:
   push:
@@ -7,33 +7,60 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    name: Build and Deploy MovieApp Frontend
+    permissions:
+      contents: read
+
     steps:
-      # 1️⃣ Checkout repository
+      # Checkout the repository
       - uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node.js
-      - name: Setup Node.js
+      # Set up Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'
+          node-version: '18.x'  # Node 18 for Vite
 
-      # 3️⃣ Install dependencies and build
-      - name: Install dependencies
-        run: npm ci
-      - name: Build Vite app
-        run: npm run build
+      # Install dependencies and build
+      - name: Install dependencies and build
+        run: |
+          npm ci
+          npm run build
 
-      # 4️⃣ Deploy to Azure Static Web App
-      - name: Deploy to Azure Static Web App
-        uses: Azure/static-web-apps-deploy@v1
+      # Upload build artifact
+      - name: Upload artifact for deployment
+        uses: actions/upload-artifact@v4
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: "upload"
-          app_location: "/"        # where package.json is located
-          api_location: ""         # leave empty if no Azure Functions
-          output_location: "dist"  # ✅ Vite output folder
-          skip_app_build: true     # skip rebuild since we already built
+          name: node-app
+          path: build   # ✅ Vite output folder renamed to 'build'
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      # Download the build artifact from the build job
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: node-app
+
+      # Login to Azure
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F36C930CB7C84410B9F28C07B5B0C713 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_148B7D18A99A4CD79E77FFC089FFFAF6 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DC0936933A144C3ABA28DB7AC7113923 }}
+
+      # Deploy to Azure Web App
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'movieapp-frontend'
+          slot-name: 'Production'
+          package: ./build   # ✅ Deploy the renamed 'build' folder
