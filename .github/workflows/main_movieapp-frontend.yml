@@ -53,9 +53,10 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F36C930CB7C84410B9F28C07B5B0C713 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_148B7D18A99A4CD79E77FFC089FFFAF6 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DC0936933A144C3ABA28DB7AC7113923 }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
 
       # Deploy to Azure Web App
       - name: Deploy to Azure Web App
@@ -64,3 +65,4 @@ jobs:
           app-name: 'movieapp-frontend'
           slot-name: 'Production'
           package: ./build   # ✅ Deploy the renamed 'build' folder
+
