@@ -4,10 +4,6 @@ import Spinner from "./components/Spinner";
 import MovieCard from "./components/MovieCard";
 import { useDebounce } from "react-use";
 
-// Use your backend URL from .env
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
-// TMDB API setup
 const API_BASE_URL = "https://api.themoviedb.org/3";
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
@@ -26,10 +22,8 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Debounce search input
   useDebounce(() => setDebouncedSerachTerm(searchTerm), 500, [searchTerm]);
 
-  // Fetch movies from TMDB
   const fetchMovies = async (query = "") => {
     setIsLoading(true);
     setErrorMessage("");
@@ -50,20 +44,11 @@ const App = () => {
     }
   };
 
-  // Update search count in your Azure backend
-  const updateSearchCount = async () => {
-    try {
-      await fetch(`${BACKEND_URL}/users`, { method: "POST" }); // assuming POST increments count
-    } catch (err) {
-      console.error("Error updating search count:", err);
-    }
-  };
 
-  // Call updateSearchCount whenever movie search happens
+
   useEffect(() => {
     if (debouncedSearchTerm) {
       fetchMovies(debouncedSearchTerm);
-      updateSearchCount();
     } else {
       fetchMovies();
     }
