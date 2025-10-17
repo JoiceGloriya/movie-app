@@ -1,4 +1,4 @@
-name: Build and deploy Vite React app to Azure Web App - movieapp-frontend
+name: Build and Deploy Vite React App to Azure Static Web App - movie-app
 
 on:
   push:
@@ -13,14 +13,14 @@ jobs:
       contents: read
 
     steps:
-      # Checkout the repository
+      # Checkout the repo
       - uses: actions/checkout@v4
 
-      # Set up Node.js
+      # Setup Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'  # Node 18 for Vite
+          node-version: '18.x'
 
       # Install dependencies and build
       - name: Install dependencies and build
@@ -33,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: build   # ✅ Vite output folder renamed to 'build'
+          path: build  # ✅ Vite output folder renamed to 'build'
 
   deploy:
     runs-on: ubuntu-latest
@@ -43,11 +43,15 @@ jobs:
       contents: read
 
     steps:
-      # Download the build artifact from the build job
-      - name: Download artifact
+      # Checkout the repo again
+      - uses: actions/checkout@v4
+
+      # Download the build artifact
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: node-app
+          path: build
 
       # Login to Azure
       - name: Login to Azure
@@ -57,12 +61,15 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-
-      # Deploy to Azure Web App
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
+      # Deploy to Azure Static Web App
+      - name: Deploy to Azure Static Web App
+        uses: Azure/static-web-apps-deploy@v1
         with:
-          app-name: 'movieapp-frontend'
-          slot-name: 'Production'
-          package: ./build   # ✅ Deploy the renamed 'build' folder
-
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "/"            # App root
+          output_location: "build"     # ✅ Updated to match Vite build folder
+          skip_api_build: true
+          app_artifact_location: "build"
+          is_static_export: true
