@@ -1,4 +1,4 @@
-name: Build and Deploy Vite React App - movie-app
+name: Build and Deploy Vite React App to Azure Static Web App - movie-app
 
 on:
   push:
@@ -6,66 +6,47 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+  id-token: write  # Required for OIDC login
+
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
-      # Checkout the repository
-      - uses: actions/checkout@v4
+      # 1. Checkout the repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # Setup Node.js
+      # 2. Setup Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'  # Node 18 for Vite
+          node-version: '18.x'
 
-      # Install dependencies and build
-      - name: Install dependencies and build
-        run: |
-          npm ci
-          npm run build
+      # 3. Install dependencies and build
+      - name: Install dependencies
+        run: npm ci
 
-      # Upload build artifact
-      - name: Upload artifact for deployment
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-app
-          path: dist  # ✅ Vite build folder
+      - name: Build project
+        run: npm run build
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      id-token: write   # Needed for OIDC login
-      contents: read
-
-    steps:
-      # Checkout repo (optional but good practice)
-      - uses: actions/checkout@v4
-
-      # Login to Azure using OIDC
-      - name: Login to Azure
+      # 4. Login to Azure using OIDC
+      - name: Azure Login
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           enable-AzPSSession: false
 
-      # Download the artifact from build job
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
+      # 5. Deploy to Azure Static Web App
+      - name: Deploy to Azure Static Web App
+        uses: Azure/static-web-apps-deploy@v1
         with:
-          name: node-app
-          path: ./dist
-
-      # Deploy to Azure Web App
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'movie-app'     # Your Azure Web App name
-          slot-name: 'Production'
-          package: ./dist           # Vite output folder
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "/"        # Location of your app in repo
+          output_location: "dist"  # ✅ Vite outputs to 'dist'
+          api_location: ""         # leave empty if no API
