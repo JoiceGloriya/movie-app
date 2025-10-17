@@ -20,7 +20,7 @@ jobs:
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'  # Use Node 18 for compatibility with Vite
+          node-version: '18.x'  # Use Node 18 for Vite
 
       # Install dependencies and build
       - name: Install dependencies and build
@@ -48,6 +48,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-app
+          path: ./dist  # ensure artifact is placed in dist folder
 
       # Login to Azure
       - name: Login to Azure
@@ -63,4 +64,4 @@ jobs:
         with:
           app-name: 'movieapp-frontend'
           slot-name: 'Production'
-          package: ./dist  # ✅ Deploy Vite 'dist' folder
+          package: ./dist  # ✅ Deploy the Vite 'dist' folder
